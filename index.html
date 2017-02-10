@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Alfa+Slab+One|Open+Sans:600|Orbitron" rel="stylesheet">
+    <title>Simon</title>
+    <script>
+        var active = false;
+        var counter = 1;
+        var listening = true;
+        var maxRound = 20;
+        var power = false;
+        var sequence = [];
+        var sounds={
+            0: "#sound1",
+            1: "#sound2",
+            2: "#sound3",
+            3: "#sound4",
+            4: "#sound5"
+        };
+        var strict = false;
+        var userSequence = [];
+
+        function check(){
+            var test = true;
+            for(var i = 0; i < sequence.length; i++){
+                if(sequence[i] != userSequence[i]){
+                    test = false
+                }
+            }
+            if(!test && strict){
+                setTimeout(function(){
+                    $(sounds[4])[0].play();
+                }, 500);
+                setTimeout(function(){
+                    newGame();
+                    game();
+                }, 1000);
+            }
+            else if(!test){
+                userSequence = [];
+                setTimeout(function(){
+                    $(sounds[4])[0].play();
+                }, 500);
+                setTimeout(function(){
+                    playback(sequence);
+                }, 1000);
+            }
+            else{
+                if(counter == maxRound){
+                    setTimeout(function(){
+                        win();
+                    }, 500);
+                }
+                else{
+                    counter ++;
+                    display(counter);
+                    newRound(sequence);
+                    setTimeout(function(){
+                        playback(sequence);
+                    }, 1000);
+                    userSequence = [];
+                }
+            }
+        }
+        function display(num){
+            $("#counter").html(pad(num));
+        }
+        function game(){
+            if(counter < maxRound) {
+                display(counter);
+                playback(sequence);
+            }
+        }
+        function lights(id){
+            if(power){
+                $("#" + id).fadeTo(200, 1).fadeTo(10, 0.40);
+                $(sounds[id])[0].play();
+            }
+        }
+        function newRound(arr){
+            arr.push(Math.floor(Math.random() * 4));
+        }
+        function newGame(){
+            sequence = [];
+            userSequence  = [];
+            counter = 1;
+            active = true;
+            newRound(sequence);
+        }
+        function pad(num){
+          return num < 10 ? "0" + num.toString() : num.toString();
+        }
+        function playback(arr){
+            $.each(arr, function(i, num){
+                setTimeout(function(){
+                    lights(num)
+                }, i * 600);
+                setTimeout(function(){
+                    listening = false;
+                }, i * 600);
+            });
+            setTimeout(function(){
+                listening = true;
+            }, arr.length * 600);
+        }
+        function win(){
+            var arr = [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3];
+            $("#counter").html("**");
+            $.each(arr, function(i, num){
+                setTimeout(function(){
+                    lights(num)
+                }, i * 400);
+                setTimeout(function(){
+                    listening = false;
+                }, i * 400);
+            });
+            setTimeout(function(){
+                listening = true;
+                newGame();
+                game();
+            }, arr.length * 400);
+        }
+
+         $(document).ready(function(){
+            $(".button").fadeTo(10, 0.40);
+            $(".button").on("click", function(){
+                if(power && listening){
+                    lights(this.id);
+                }
+                if(active && listening){
+                    if(userSequence.length < sequence.length){
+                        userSequence.push(this.id);
+                    }
+                    if(userSequence.length == sequence.length){
+                        check();
+                    }
+                }
+            });
+            $("#power").on("click", function(){
+                if(active){
+                    sequence = [];
+                    userSequence = [];
+                    counter = 1;
+                    active = false;
+                }
+                power = power == true ? false: true;
+                if(power){
+                    $("#counter").html("--");
+                }
+                else{
+                    $("#counter").html("");
+                }
+            });
+            $("#start").on("click", function(){
+                if(power){
+                    newGame();
+                    game();
+                }
+            });
+            $("#strict").on("click", function(){
+                strict = strict == true ? false : true;
+            })
+        });
+    </script>
+    <style>
+        body{
+            display: flex;
+            background-color: #FF8E09;
+            margin: auto;
+            justify-content: center;
+            font-family: 'Alfa Slab One', serif;
+            color: #202020;
+        }
+        #game{
+            position: relative;
+            background-color: #292929;
+            margin-top: 40px;
+            border-radius: 50%;
+            height: 400px;
+            width: 400px;
+            padding: 20px;
+        }
+        .button {
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            border: none;
+            cursor: pointer;
+            outline: 0 !important;
+        }
+        .top-left {
+            background-color: green;
+            border-radius: 100% 0 0 0;
+            right: 50%;
+        }
+        .top-right {
+            background-color: red;
+            border-radius: 0 100% 0 0;
+            left: 50%;
+        }
+        .bottom-right {
+            background-color: blue;
+            border-radius: 0 0 100% 0;
+            left: 50%;
+            top: 50%;
+        }
+        .bottom-left {
+            background-color: yellow;
+            border-radius: 0 0 0 100%;
+            right: 50%;
+            top: 50%;
+        }
+        .center-h{
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .center-v{
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .center{
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-50%);
+        }
+        #vertical-bar{
+            position: absolute;
+            width: 20px;
+            height: 400px;
+            background-color: #292929;
+        }
+        #horizontal-bar{
+            position: absolute;
+            width: 400px;
+            height: 20px;
+            background-color: #292929;
+        }
+        #inner{
+            position: absolute;
+            height: 180px;
+            width: 180px;
+            border-radius: 100%;
+            border: solid 15px #292929;
+            background: -webkit-linear-gradient(to bottom, #191919 0%,#191919 35%,#000000 35%,silver 35%,silver 100%);
+            background: -o-linear-gradient(to bottom, #191919 0%,#191919 35%,#000000 35%,silver 35%,silver 100%);
+            background: -moz-linear-gradient(to bottom, #191919 0%,#191919 35%,#000000 35%,silver 35%,silver 100%);
+            background: linear-gradient(to bottom, #191919 0%,#191919 35%,#000000 35%,silver 35%,silver 100%);
+        }
+        #text{
+            color: silver;
+        }
+        .center-buttons{
+            position: absolute;
+            height: 25px;
+            width: 25px;
+            border-radius: 50%;
+            left: 55%;
+            border: 4px solid #222222;
+            cursor: pointer;
+        }
+        #center-row{
+            position: absolute;
+            font-size: 12px;
+            font-weight:900;
+            font-family: 'Open Sans', sans-serif;
+        }
+        .count{
+            position: fixed;
+            background-color: #5B0000;
+            display: flex;
+            height: 30px;
+            width: 50px;
+            border: 4px solid #222222;
+            border-radius: 5px;
+            font-family: 'Orbitron', sans-serif;
+            color: #C20114;
+            font-size: 24px;
+            align-items: center;
+            justify-content: center;
+            right: 60%;
+        }
+        #start{
+            background-color: #E00000;
+            margin-left: -8px;
+        }
+        #strict{
+            background-color: #fcfc00;
+            margin-left: 38px;
+        }
+        .center-text{
+            margin-top: 25px;
+            margin-left: 70px;
+        }
+        .switch {
+            position: absolute;
+            display: inline-block;
+            width: 50px;
+            height: 20px;
+            bottom: 35px;
+        }
+        .switch input {display:none;}
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #111111;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            border: 1px solid #555555;
+            background-color: #E00000;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #111111;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #111111;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(30px);
+            -ms-transform: translateX(30px);
+            transform: translateX(30px);
+        }
+
+        .switch-text{
+            position: absolute;
+            bottom: 15px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <audio src="https://s3.amazonaws.com/freecodecamp/simonSound1.mp3"  id="sound1"></audio>
+        <audio src="https://s3.amazonaws.com/freecodecamp/simonSound2.mp3"  id="sound2"></audio>
+        <audio src="https://s3.amazonaws.com/freecodecamp/simonSound3.mp3"  id="sound3"></audio>
+        <audio src="https://s3.amazonaws.com/freecodecamp/simonSound4.mp3"  id="sound4"></audio>
+        <audio src="https://dl.dropboxusercontent.com/u/46565366/beep-5.wav" id="sound5"></audio>
+        <button class="top-left button" id="0"></button>
+        <button class="top-right button" id="1"></button>
+        <button class="bottom-right button" id="2"></button>
+        <button class="bottom-left button" id="3"></button>
+        <div class="center-h" id="horizontal-bar"></div>
+        <div class="center-v" id="vertical-bar"></div>
+        <div class="center" id="inner">
+            <h1 style="text-align: center" id="text">simon</h1>
+            <label class="switch center-v">
+                <input type="checkbox">
+                <div class="slider" id="power"></div>
+            </label>
+            <div class="center-v switch-text">OFF &nbsp; ON</div>
+        </div>
+        <div class="center" id="center-row">
+            <div class="count" id="counter"></div>
+            <button class="center-buttons" id="start"></button><button class="center-buttons" id="strict"></button>
+            <div class="center-text">START &nbsp; STRICT</div>
+        </div>
+    </div>
+</body>
+</html>
